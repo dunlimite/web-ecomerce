@@ -3,11 +3,20 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:ci": "vite build && node scripts/ci/write-build-report.mjs",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "lint:ci": "mkdir -p reports/lint && eslint . --format json --output-file reports/lint/eslint-report.json",
+    "test": "node --test tests/**/*.test.mjs",
+    "test:ci": "mkdir -p reports/tests && node --test --test-reporter=junit --test-reporter-destination=reports/tests/junit.xml tests/**/*.test.mjs",
+    "audit:ci": "node scripts/ci/run-npm-audit.mjs",
+    "preview": "vite preview",
+    "ci": "npm run lint && npm run test && npm run build"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",

@@ -1,6 +1,4 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { axiosInstance } from "../../lib/axios";
-import { toast } from "react-toastify";
+import { createSlice } from "@reduxjs/toolkit";
 
 const productSlice = createSlice({
   name: "product",
@@ -16,7 +14,7 @@ const productSlice = createSlice({
     isPostingReview: false,
     productReviews: [],
   },
-  extraReducers: (builder) => {},
+  reducers: {},
 });
 
 export default productSlice.reducer;

@@ -1,6 +1,4 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { axiosInstance } from "../../lib/axios";
-import { toast } from "react-toastify";
+import { createSlice } from "@reduxjs/toolkit";
 
 const orderSlice = createSlice({
   name: "order",
@@ -13,8 +11,6 @@ const orderSlice = createSlice({
     paymentIntent: "",
   },
   reducers: {},
-  extraReducers: (builder) => {},
 });
 
 export default orderSlice.reducer;
-export const {} = orderSlice.actions;

@@ -1,1 +1,190 @@
+name: CI
 
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - Staging
+  pull_request:
+    branches:
+      - main
+      - dev
+      - Staging
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+
+env:
+  NODE_VERSION: '20'
+  CI: true
+
+jobs:
+  lint:
+    name: Lint And Static Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint with JSON report
+        run: npm run lint:ci
+
+      - name: Upload lint artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report-${{ github.ref_name }}
+          path: reports/lint/
+          if-no-files-found: warn
+          retention-days: 14
+
+  test:
+    name: CI Smoke Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run CI smoke tests with JUnit output
+        run: npm run test:ci
+
+      - name: Upload test artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report-${{ github.ref_name }}
+          path: reports/tests/
+          if-no-files-found: warn
+          retention-days: 14
+
+  build:
+    name: Production Build Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production bundle and generate report
+        run: npm run build:ci
+
+      - name: Upload build reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-report-${{ github.ref_name }}
+          path: |
+            reports/build/
+            dist/
+          if-no-files-found: warn
+          retention-days: 14
+
+  dependency-audit:
+    name: Dependency Vulnerability Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit at high severity threshold
+        run: npm run audit:ci
+
+      - name: Upload dependency audit artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-audit-${{ github.ref_name }}
+          path: reports/security/npm-audit.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  filesystem-security:
+    name: Filesystem Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Prepare security report directory
+        run: mkdir -p reports/security
+
+      - name: Run Trivy filesystem scan
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          format: sarif
+          output: reports/security/trivy-results.sarif
+          exit-code: '1'
+
+      - name: Upload Trivy artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report-${{ github.ref_name }}
+          path: reports/security/trivy-results.sarif
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload Trivy SARIF to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: reports/security/trivy-results.sarif
+
+  dependency-review:
+    name: Pull Request Dependency Review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Review dependency changes
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high

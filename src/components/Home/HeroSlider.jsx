@@ -1,40 +1,40 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
+const slides = [
+  {
+    id: 1,
+    title: "Premium Electronics",
+    subtitle: "Discover the latest tech innovations",
+    description:
+      "Up to 50% off on premium headphones, smartwatches, and more",
+    image: "./electronics.jpg",
+    cta: "Shop Electronics",
+    url: "/products?category=Electronics",
+  },
+  {
+    id: 2,
+    title: "Fashion Forward",
+    subtitle: "Style meets comfort",
+    description: "New arrivals in designer clothing and accessories",
+    image: "./fashion.jpg",
+    cta: "Explore Fashion",
+    url: "/products?category=Fashion",
+  },
+  {
+    id: 3,
+    title: "Home & Garden",
+    subtitle: "Transform your space",
+    description: "Beautiful furniture and decor for every home",
+    image: "./furniture.jpg",
+    cta: "Shop Home",
+    url: "/products?category=Home & Garden",
+  },
+];
+
 const HeroSlider = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
-
-  const slides = [
-    {
-      id: 1,
-      title: "Premium Electronics",
-      subtitle: "Discover the latest tech innovations",
-      description:
-        "Up to 50% off on premium headphones, smartwatches, and more",
-      image: "./electronics.jpg",
-      cta: "Shop Electronics",
-      url: "/products?category=Electronics",
-    },
-    {
-      id: 2,
-      title: "Fashion Forward",
-      subtitle: "Style meets comfort",
-      description: "New arrivals in designer clothing and accessories",
-      image: "./fashion.jpg",
-      cta: "Explore Fashion",
-      url: "/products?category=Fashion",
-    },
-    {
-      id: 3,
-      title: "Home & Garden",
-      subtitle: "Transform your space",
-      description: "Beautiful furniture and decor for every home",
-      image: "./furniture.jpg",
-      cta: "Shop Home",
-      url: `/products?category=Home & Garden`,
-    },
-  ];
 
   useEffect(() => {
     const timer = setInterval(() => {
